@@ -10,6 +10,14 @@
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
+    <script>
+        let authToken = localStorage.getItem('authToken');
+
+        if (!authToken) {
+            window.location.href = 'register.html';
+        }
+    </script>
+  
 
     <div class="container">
         <nav class="navbar navbar-light bg-light justify-content-between">
@@ -67,6 +75,8 @@
                     <option value="SUV">SUV</option>
                 </select>
             </div>
+
+            <input type="hidden" id="user_id" value="16">
 
             <div class="form-group">
                 <label for="image">Dodaj fotografiju</label>
