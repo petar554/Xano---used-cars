@@ -60,7 +60,6 @@ if (document.getElementById('noviOglasBtn')) {
         let year = document.getElementById('year').value;
         let karoserija = document.getElementById('karoserija').value;
         let file = document.getElementById('file');
-        let user_id = document.getElementById('user_id');
 
         let apiEndpoint = apiMainUrl + "/car";
 
@@ -72,10 +71,14 @@ if (document.getElementById('noviOglasBtn')) {
         formData.append('year', year);
         formData.append('karoserija', karoserija);
         formData.append('file', file.files[0]);
-        formData.append('user_id', user_id);
+
+        let authToken = localStorage.getItem('authToken');
     
         fetch(apiEndpoint, {
             method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + authToken
+            },
             body: formData
         })
         .then(response => {
