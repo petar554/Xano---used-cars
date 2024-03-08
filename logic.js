@@ -162,12 +162,12 @@ if (localStorage.getItem('authToken')) {
         localStorage.clear();
         window.location.href = 'index.html';
     }
-}
+}  
 
 // all ads
 if (document.getElementById('pretraziBtn')) {
     document.getElementById('pretraziBtn').onclick = function (e) {
-        e.preventDefault();
+        // e.preventDefault();
 
         let apiEndpoint = apiMainUrl + "/car";
 
@@ -213,42 +213,116 @@ if (document.getElementById('appendImage')) {
     let apiEndpoint = apiMainUrl + "/car/" + car_id;
 
     fetch(apiEndpoint)
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(errorData => {
-                console.error("Error data:", errorData);
-                throw new Error('Server responded with a non-OK status.');
-            });
-        }
-        return response.json();
-    })
-    .then(car => {
-        car = car[0];
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    console.error("Error data:", errorData);
+                    throw new Error('Server responded with a non-OK status.');
+                });
+            }
+            return response.json();
+        })
+        .then(car => {
+            car = car[0];
 
-        let imageContainer = document.querySelector('#appendImage');
-        if (imageContainer) {
-            let img = document.createElement('img');
-            img.src = `${car.car_image.url}`;
-            img.alt = car.marka;
-            imageContainer.appendChild(img);
-        } else {
-            alert('Image container #appendImage not found');
-        }
+            let imageContainer = document.querySelector('#appendImage');
+            if (imageContainer) {
+                let img = document.createElement('img');
+                img.src = `${car.car_image.url}`;
+                img.alt = car.marka;
+                imageContainer.appendChild(img);
+            } else {
+                alert('Image container #appendImage not found');
+            }
 
-        let contentContainer = document.querySelector('#appendContent');
-        if (contentContainer) {
-            contentContainer.innerHTML = `
+            let contentContainer = document.querySelector('#appendContent');
+            if (contentContainer) {
+                contentContainer.innerHTML = `
                 <h4>${car.marka}</h4>
                 <p>Cijena: ${car.price}</p>
                 <p>Godište: ${car.year}</p>
                 <p>Gorivo: ${car.fuel}</p>
                 <p>Kontakt telefon: ${car._user.phone}</p>
             `;
-        } else {
-            alert('Content container #appendContent not found');
+            } else {
+                alert('Content container #appendContent not found');
+            }
+        })
+        .catch(error => {
+            console.error("Request failed:", error);
+        });
+}
+
+//
+if(document.getElementById("pretraziBtn")) {
+    let currentUrl = window.location.href;
+
+    if(currentUrl.includes('?')) {
+        let queryParams = new URLSearchParams(window.location.search);
+
+        let marka = queryParams.get('marka');
+        let year_from = queryParams.get('year_from');
+        let year_to = queryParams.get('year_to');
+        let price = queryParams.get('price');
+        let gorivo = queryParams.get('gorivo');
+        let karoserija = queryParams.get('karoserija');
+
+        if(marka) {
+            document.getElementById('marka').value = marka;
         }
-    })
-    .catch(error => {
-        console.error("Request failed:", error);
-    });
+
+        if(year_from) {
+            document.getElementById('year_from').value = year_from;
+        }
+
+        if(year_to) {
+            document.getElementById('year_to').value = year_to;
+        }
+
+        if(price) {
+            document.getElementById('price').value = price;
+        }
+
+        if(gorivo) {
+            document.getElementById('gorivo').value = gorivo;
+        }
+
+        if(karoserija) {
+            document.getElementById('karoserija').value = karoserija;
+        }
+
+        let apiEndpoint = apiMainUrl + '/search'
+        apiEndpoint += `?marka=${encodeURIComponent(marka)}&year_from=${year_from}&year_to=${year_to}&price=${price}&gorivo=${encodeURIComponent(gorivo)}`
+
+        fetch(apiEndpoint, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(response => response.json())
+          .then(cars => {
+            let container = document.querySelector('#sviOglasi');
+            container.innerHTML = '';
+
+            console.log(cars);
+          
+            cars.forEach(car => {
+              let carElement = document.createElement('div');
+              carElement.className = 'col-sm-4';
+              carElement.innerHTML =
+                `<div class="car-item-wrapper">
+                  <img src="${car.car_image.url}?tpl=big" alt="${car.marka}">
+                  <h4>${car.marka}</h4>
+                  <p>Cijena: ${car.price}</p>
+                  <p>Godište: ${car.year}</p>
+                  <a class="btn btn-warning" href="car.html?id=${car.id}">Vidi više</a>
+                </div>`;
+              container.appendChild(carElement);
+            });
+          
+            //loader.style.display = 'none';
+          });
+          
+    }
 }
