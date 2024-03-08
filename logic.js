@@ -1,53 +1,104 @@
 let apiMainUrl = 'https://x8ki-letl-twmt.n7.xano.io/api:MYXwu2O1';
+let loader = document.querySelector('.loader-overlay'); 
+
+// function for POST request
+function sendPostRequest(apiEndpoint, requestBody, successCallback) {
+    fetch(apiEndpoint, {
+        method: 'POST',
+        headers: {
+            'Content-type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                console.error("Error data:", errorData);
+                throw new Error('Server responded with a non-OK status');
+            });
+        }
+        return response.json();
+    })
+    .then(data => successCallback(data))
+    .catch(error => console.error("Request failed:", error))
+    .finally(() => loader.style.display = 'none');
+}
 
 // user registraion
+function handleRegistration(e) {
+    e.preventDefault();
+
+    let name = document.getElementById('name').value;
+    let email = document.getElementById('email').value;
+    let password = document.getElementById('password').value;
+    let phone = document.getElementById('phone').value;
+    let repeat_password = document.getElementById('repeat_password').value;
+
+    let requestBody = { name, email, password, phone, repeat_password };
+    let apiEndpoint = `${apiMainUrl}/auth/signup`;
+
+    loader.style.display = 'flex';
+    sendPostRequest(apiEndpoint, requestBody, data => {
+        if (data.authToken) {
+            localStorage.setItem('authToken', data.authToken);
+            window.location.href = 'novi_oglas.html';
+        }
+    });
+}
+
 if (document.getElementById('registerBtn')) {
-    document.getElementById('registerBtn').onclick = function (e) {
+    document.getElementById('registerBtn').onclick = handleRegistration;
+}
+
+// user login
+function handleUserLogin(e) {
+    e.preventDefault();
+
+    let email = document.getElementById('email').value;
+    let password = document.getElementById('password').value;
+
+    let requestBody = {
+        email,
+        password
+    }
+
+    let apiEndpoint = apiMainUrl + "/auth/login";
+    loader.style.display = 'flex';
+
+    loader.style.display = 'flex';
+    sendPostRequest(apiEndpoint, requestBody, data => {
+        if (data.authToken) {
+            localStorage.setItem('authToken', data.authToken);
+            window.location.href = 'novi_oglas.html';
+        }
+    });
+}
+
+if (document.getElementById('loginBtn')) {
+    document.getElementById('loginBtn').onclick = handleUserLogin;
+}
+
+
+// user logout
+if (document.getElementById('odjaviSe')) {
+    document.getElementById('odjaviSe').onclick = function (e) {
         e.preventDefault();
 
-        let name = document.getElementById('name').value;
-        let email = document.getElementById('email').value;
-        let password = document.getElementById('password').value;
-        let phone = document.getElementById('phone').value;
-        let repeat_password = document.getElementById('repeat_password').value;
-
-        let apiEndpoint = apiMainUrl + "/auth/signup";
-
-        let requestBody = {
-            name,
-            email,
-            password,
-            phone,
-            repeat_password
-        }
-
-        fetch(apiEndpoint, {
-            method: 'POST',
-            headers: {
-                'Content-type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errorData => {
-                        console.error("Error data:", errorData);
-                        throw new Error('Server responded with a non-OK status');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.authToken) {
-                    localStorage.setItem('authToken', data.authToken);
-                    window.location.href = 'novi_oglas.html';
-                }
-            })
-            .catch(error => {
-                console.error("Request failed:", error);
-            });
+        localStorage.clear();
+        window.location.href = 'index.html';
     }
 }
+
+if (localStorage.getItem('authToken')) {
+    document.getElementById("navigation").innerHTML = `<a href="novi_oglas.html" class="btn btn-warning">Add ad</a>
+                                                       <a href="#" id="odjaviSe" class="btn btn-info">Log out</a>`
+    document.getElementById('odjaviSe').onclick = function (e) {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = 'index.html';
+    }
+}  
+
 
 // adding ads
 if (document.getElementById('noviOglasBtn')) {
@@ -73,6 +124,7 @@ if (document.getElementById('noviOglasBtn')) {
         formData.append('file', file.files[0]);
 
         let authToken = localStorage.getItem('authToken');
+        loader.style.display = 'flex';
 
         fetch(apiEndpoint, {
             method: 'POST',
@@ -92,77 +144,14 @@ if (document.getElementById('noviOglasBtn')) {
             })
             .then(data => {
                 alert('Ad successfully added. Awaiting administrator approval.');
-                //location.reload();
+                loader.style.display = 'none';
+                location.reload();
             })
             .catch(error => {
                 console.error("Request failed:", error);
             });
     }
 }
-
-// user login
-if (document.getElementById('loginBtn')) {
-    document.getElementById('loginBtn').onclick = function (e) {
-        e.preventDefault();
-
-        let email = document.getElementById('email').value;
-        let password = document.getElementById('password').value;
-
-        let requestBody = {
-            email,
-            password
-        }
-
-        let apiEndpoint = apiMainUrl + "/auth/login";
-
-        fetch(apiEndpoint, {
-            method: 'POST',
-            headers: {
-                'Content-type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errorData => {
-                        console.error("Error data:", errorData);
-                        throw new Error('Server responded with a non-OK status.');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.authToken) {
-                    localStorage.setItem('authToken', data.authToken);
-                    window.location.href = 'novi_oglas.html';
-                }
-            })
-            .catch(error => {
-                console.error("Request failed:", error);
-            });
-    }
-}
-
-// user logout
-if (document.getElementById('odjaviSe')) {
-    document.getElementById('odjaviSe').onclick = function (e) {
-        e.preventDefault();
-
-        localStorage.clear();
-        window.location.href = 'index.html';
-    }
-}
-
-if (localStorage.getItem('authToken')) {
-    document.getElementById("navigation").innerHTML = `<a href="novi_oglas.html" class="btn btn-warning">Add ad</a>
-                                                       <a href="#" id="odjaviSe" class="btn btn-info">Log out</a>`
-
-    document.getElementById('odjaviSe').onclick = function (e) {
-        e.preventDefault();
-        localStorage.clear();
-        window.location.href = 'index.html';
-    }
-}  
 
 // all ads
 if (document.getElementById('pretraziBtn')) {
@@ -170,6 +159,7 @@ if (document.getElementById('pretraziBtn')) {
         // e.preventDefault();
 
         let apiEndpoint = apiMainUrl + "/car";
+        loader.style.display = 'flex';
 
         fetch(apiEndpoint)
             .then(response => {
@@ -182,6 +172,8 @@ if (document.getElementById('pretraziBtn')) {
                 return response.json();
             })
             .then(cars => {
+                loader.style.display = 'none';
+
                 let container = document.getElementById('sviOglasi');
 
                 cars.forEach(car => {
@@ -212,6 +204,8 @@ if (document.getElementById('appendImage')) {
     let car_id = urlParams.get('id');
     let apiEndpoint = apiMainUrl + "/car/" + car_id;
 
+    loader.style.display = 'flex';
+
     fetch(apiEndpoint)
         .then(response => {
             if (!response.ok) {
@@ -223,6 +217,7 @@ if (document.getElementById('appendImage')) {
             return response.json();
         })
         .then(car => {
+            loader.style.display = 'none';
             car = car[0];
 
             let imageContainer = document.querySelector('#appendImage');
@@ -294,6 +289,8 @@ if(document.getElementById("pretraziBtn")) {
         let apiEndpoint = apiMainUrl + '/search'
         apiEndpoint += `?marka=${encodeURIComponent(marka)}&year_from=${year_from}&year_to=${year_to}&price=${price}&gorivo=${encodeURIComponent(gorivo)}`
 
+        loader.style.display = 'flex';
+
         fetch(apiEndpoint, {
             method: 'GET',
             headers: {
@@ -302,6 +299,7 @@ if(document.getElementById("pretraziBtn")) {
           })
           .then(response => response.json())
           .then(cars => {
+            loader.style.display = 'none';
             let container = document.querySelector('#sviOglasi');
             container.innerHTML = '';
 
